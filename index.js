@@ -1,9 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const stripe = require('stripe')(process.env.STRIPE_SK)
 const app = express();
 const port = process.env.PORT || 9000 ;
-const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // middle-wares
 app.use(cors());
@@ -20,6 +21,7 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
 async function run() {
   try {
 
@@ -33,6 +35,18 @@ async function run() {
       const query = {email : email}
       const result = await usersCollection.findOne(query);
       res.send(result)
+    })
+    // payment api
+    app.post('/payment-intent', async(req,res)=> {
+      const price = req.body;
+      const amount = parseInt( price * 100 );
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount : amount,
+        currency : 'usd',
+        payment_method_types : ['card']
+
+      });
+      res.send({clientSecret: paymentIntent.client_secret})
     })
     
     // employee or manager post in database 
