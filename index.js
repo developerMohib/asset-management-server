@@ -2,11 +2,11 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const stripe = require('stripe')(process.env.STRIPE_SK)
+const stripe = require('stripe')(process.env.STRIPE_SK);
 const app = express();
 const port = process.env.PORT || 9000 ;
 
-// middle-wares
+// middle-wares 
 app.use(cors());
 app.use(express.json())
 
@@ -29,16 +29,20 @@ async function run() {
     const database = client.db('corporateManage');
     const usersCollection = database.collection('users')
     
-    // employee or manager get from database 
+    // employee or manager get from database ------------------------------------------------
     app.get('/users/:email', async(req, res) => {
       const email = req.params.email ;
       const query = {email : email}
       const result = await usersCollection.findOne(query);
       res.send(result)
     })
-    // payment api
+    // payment api -----------------------------------------------------------------------------
     app.post('/payment-intent', async(req,res)=> {
-      const price = req.body;
+      const {price} = req.body;
+      console.log(price,'price');
+      if(price === 0){
+        return;
+      }
       const amount = parseInt( price * 100 );
       const paymentIntent = await stripe.paymentIntents.create({
         amount : amount,
@@ -48,8 +52,8 @@ async function run() {
       });
       res.send({clientSecret: paymentIntent.client_secret})
     })
-    
-    // employee or manager post in database 
+   
+    // employee or manager post in database -------------------------------------------------
     app.post('/users', async (req, res) => {
       const user = req.body ;
       const result = await usersCollection.insertOne(user);
