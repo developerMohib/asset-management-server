@@ -29,6 +29,12 @@ async function run() {
     const database = client.db('corporateManage');
     const usersCollection = database.collection('users')
     
+    // employee or manager All user ------------------------------------------------
+    app.get('/users', async(req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result)
+    })
+
     // employee or manager get from database ------------------------------------------------
     app.get('/users/:email', async(req, res) => {
       const email = req.params.email ;
@@ -36,10 +42,11 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result)
     })
+
     // payment api -----------------------------------------------------------------------------
     app.post('/payment-intent', async(req,res)=> {
       const {price} = req.body;
-      console.log(price,'price');
+      console.log(price,'price', typeof price);
       if(price === 0){
         return;
       }
@@ -49,17 +56,17 @@ async function run() {
         currency : 'usd',
         payment_method_types : ['card']
 
-      });
+      });          
       res.send({clientSecret: paymentIntent.client_secret})
     })
-   
+
     // employee or manager post in database -------------------------------------------------
     app.post('/users', async (req, res) => {
       const user = req.body ;
       const result = await usersCollection.insertOne(user);
       res.send(result)
     })
-    
+
     // Send a ping to confirm a successful connection
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
