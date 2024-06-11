@@ -29,14 +29,13 @@ async function run() {
     const usersCollection = database.collection("users");
     const productCollection = database.collection("products");
 
-    //---------------------------------------- READ ALL DATA -----------------------------------
+    //------------------------------------------- POST DATA ------------------------------------
     // employee or manager All user ------------------------------------------------------------
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
-    //----------------------------------- READ SPECIFIC DATA -----------------------------------
     // employee or manager get from database ---------------------------------------------------
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
@@ -45,7 +44,6 @@ async function run() {
       res.send(result);
     });
 
-    //------------------------------------------- POST DATA ------------------------------------
     // employee or manager post in database ----------------------------------------------------
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -53,7 +51,21 @@ async function run() {
       res.send(result);
     });
 
-    // payment api -----------------------------------------------------------------------------
+    //-------------------------------------- PRODUCT API --------------------------------------
+    app.get("/products", async (req, res) => {
+      const result = await productCollection.find().toArray();
+      res.send(result);
+    });
+
+    // product post ---------------------------------------------------------------------------
+    app.post("/products", async (req, res) => {
+      const product = req.body;
+      const result = await productCollection.insertOne(product);
+      res.send(result);
+    });
+
+    //----------------------------------------- PAYMENT DATA -----------------------------------
+    //-------------------------------------- payment api ---------------------------------------
     app.post("/payment-intent", async (req, res) => {
       const { price } = req.body;
       console.log(price, "price", typeof price);
@@ -68,13 +80,6 @@ async function run() {
       });
       res.send({ clientSecret: paymentIntent.client_secret });
     });
-    
-    // Product api ----------------------------------------------------------------------------
-    app.post('/products', async (req, res) => {
-      const product = req.body ;
-      const result = await productCollection.insertOne(product) ;
-      res.send(result)
-    })
 
     // Send a ping to confirm a successful connection
     console.log(
