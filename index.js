@@ -28,6 +28,7 @@ async function run() {
     const database = client.db("corporateManage");
     const usersCollection = database.collection("users");
     const productCollection = database.collection("products");
+    const requProductCollec = database.collection('requ-product')
 
     //------------------------------------------- POST DATA ------------------------------------
     // employee or manager All user ------------------------------------------------------------
@@ -63,6 +64,18 @@ async function run() {
       const result = await productCollection.insertOne(product);
       res.send(result);
     });
+
+    // ------------------------------------- Requested Product ---------------------------------
+    app.get('/requ-products',async(req, res)=>{      
+      const result = await requProductCollec.find().toArray() ;
+      res.send(result)
+    })
+    
+    app.post('/requ-product',async(req, res)=>{
+      const item = req.body ;
+      const result = await requProductCollec.insertOne(item) ;
+      res.send(result)
+    })
 
     //----------------------------------------- PAYMENT DATA -----------------------------------
     //-------------------------------------- payment api ---------------------------------------
