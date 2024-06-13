@@ -66,7 +66,7 @@ async function run() {
     });
 
     // ------------------------------------- Requested Product ---------------------------------
-    app.get('/requ-products',async(req, res)=>{      
+    app.get('/requ-product',async(req, res)=>{      
       const result = await requProductCollec.find().toArray() ;
       res.send(result)
     })
