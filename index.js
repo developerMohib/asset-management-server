@@ -64,6 +64,15 @@ async function run() {
       const result = await productCollection.insertOne(product);
       res.send(result);
     });
+    
+    // update the product quantity
+    app.put("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await requProductCollec.deleteOne(query);
+      res.send(result);
+    });
+
 
     // ------------------------------------- Requested Product ---------------------------------
     app.get("/requ-product", async (req, res) => {
