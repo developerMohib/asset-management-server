@@ -75,18 +75,14 @@ async function run() {
 
 
     // ------------------------------------- Requested Product ---------------------------------
-    app.get("/requ-product", async (req, res) => {
-      const result = await requProductCollec.find().toArray();
+    app.get("/requ-product/:email", async (req, res) => {
+      const email = req.params.email ;
+        console.log("find email ", email);
+      const query = { requesterEmail : email}
+      const result = await requProductCollec.find(query).toArray();
       res.send(result);
     });
-    app.get("/requ-product/:id", async (req, res) => {
-      const id = req.params.id;
-      // console.log("delete id", id);
-      const query = { _id: new ObjectId(id) };
-      const result = await requProductCollec.findOne(query);
-      res.send(result);
-    });
-
+    
     app.post("/requ-product", async (req, res) => {
       const item = req.body;
       const result = await requProductCollec.insertOne(item);
