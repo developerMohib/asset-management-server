@@ -29,6 +29,7 @@ async function run() {
     const usersCollection = database.collection("users");
     const productCollection = database.collection("products");
     const requProductCollec = database.collection("requ-product");
+    const approvProductCollec = database.collection("approv-product");
 
     //------------------------------------------- POST DATA ------------------------------------
     // employee or manager All user ------------------------------------------------------------
@@ -58,34 +59,73 @@ async function run() {
       res.send(result);
     });
 
-    // product post ---------------------------------------------------------------------------
+    // product post
     app.post("/products", async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
       res.send(result);
     });
-    
+
     // update the product quantity
     app.put("/products/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await requProductCollec.deleteOne(query);
+      const result = await productCollection.deleteOne(query); // have to change deleteOne
       res.send(result);
     });
 
+    // deleted product
+    app.delete("/products/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // ------------------------------------- Requested Product ---------------------------------
+    // ------------------------------------- Requested Product ---------------------------------
+    app.get("/requ-product", async (req, res) => {
+      const result = await requProductCollec.find().toArray();
+      res.send(result);
+    });
+
     app.get("/requ-product/:email", async (req, res) => {
-      const email = req.params.email ;
-        console.log("find email ", email);
-      const query = { requesterEmail : email}
+      const email = req.params.email;
+      const query = { requesterEmail: email };
       const result = await requProductCollec.find(query).toArray();
       res.send(result);
     });
-    
+
     app.post("/requ-product", async (req, res) => {
       const item = req.body;
       const result = await requProductCollec.insertOne(item);
+      res.send(result);
+    });
+
+    // for update product 
+    app.put("/requ-product/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      // const option = {upsert : true};
+      // const approveDate = req.body;
+      const updateDoc = {
+        $set: {
+          requestStatus: "approved",
+        },
+      };
+      const result = await requProductCollec.updateOne(query, updateDoc);
+      res.send(result);
+    });
+    // for rejected product
+    app.patch("/requ-product/rejected/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          requestStatus: "rejected",
+        },
+      };
+      const result = await requProductCollec.updateOne(query, updateDoc);
       res.send(result);
     });
 
@@ -93,6 +133,20 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await requProductCollec.deleteOne(query);
+      res.send(result);
+    });
+
+
+    // ------------------------------------- Approve Product ---------------------------------
+    // ------------------------------------- Approve Product ---------------------------------
+    app.get("/requ-product", async (req, res) => {
+      const result = await approvProductCollec.find().toArray();
+      res.send(result);
+    });
+
+    app.post("/approve-product", async (req, res) => {
+      const item = req.body;
+      const result = await approvProductCollec.insertOne(item);
       res.send(result);
     });
 
@@ -112,6 +166,7 @@ async function run() {
       });
       res.send({ clientSecret: paymentIntent.client_secret });
     });
+    //-------------------------------------- payment api ---------------------------------------
 
     // Send a ping to confirm a successful connection
     console.log(
