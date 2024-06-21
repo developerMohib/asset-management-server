@@ -96,16 +96,26 @@ async function run() {
       res.send(result);
     });
 
-    // search product 
-    app.get('/search', async(req,res)=>{
-      const {name} =  req.query;
-      console.log('search f', name);
-      if(!name){
-        return res.status(400).send('Product name is required');
+    // search products
+    app.get("/search", async (req, res) => {
+      const { name } = req.query;
+      if (!name) {
+        return res.status(400).send("Product name is required");
       }
-      const query = { assetName: new RegExp(name, 'i') };
+      const query = { assetName: new RegExp(name, "i") };
       const result = await requProductCollec.find(query).toArray();
-      res.send(result)
+      res.send(result);
+    });
+
+    // filter products
+    app.get("/filter", async (req, res) => {
+      const { assetType } = req.query;
+      let filter = {};
+      if (assetType) {
+        filter.assetType = assetType;
+      }
+      const result = await requProductCollec.find(filter).toArray();
+    res.send(result);
     });
 
     app.post("/requ-product", async (req, res) => {
@@ -114,7 +124,7 @@ async function run() {
       res.send(result);
     });
 
-    // for update product 
+    // for update product
     app.put("/requ-product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -148,7 +158,7 @@ async function run() {
       res.send(result);
     });
 
-    // ------------------------------------- Approve Product ---------------------------------    
+    // ------------------------------------- Approve Product ---------------------------------
     // ------------------------------------- Approve Product ---------------------------------
     app.get("/requ-product", async (req, res) => {
       const result = await approvProductCollec.find().toArray();
@@ -161,7 +171,7 @@ async function run() {
       res.send(result);
     });
 
-    //----------------------------------------- PAYMENT DATA -----------------------------------        
+    //----------------------------------------- PAYMENT DATA -----------------------------------
     //-------------------------------------- payment api ---------------------------------------
     app.post("/payment-intent", async (req, res) => {
       const { price } = req.body;
