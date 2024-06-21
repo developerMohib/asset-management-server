@@ -96,6 +96,18 @@ async function run() {
       res.send(result);
     });
 
+    // search product 
+    app.get('/search', async(req,res)=>{
+      const {name} =  req.query;
+      console.log('search f', name);
+      if(!name){
+        return res.status(400).send('Product name is required');
+      }
+      const query = { assetName: new RegExp(name, 'i') };
+      const result = await requProductCollec.find(query).toArray();
+      res.send(result)
+    });
+
     app.post("/requ-product", async (req, res) => {
       const item = req.body;
       const result = await requProductCollec.insertOne(item);
@@ -136,8 +148,7 @@ async function run() {
       res.send(result);
     });
 
-
-    // ------------------------------------- Approve Product ---------------------------------
+    // ------------------------------------- Approve Product ---------------------------------    
     // ------------------------------------- Approve Product ---------------------------------
     app.get("/requ-product", async (req, res) => {
       const result = await approvProductCollec.find().toArray();
@@ -150,7 +161,7 @@ async function run() {
       res.send(result);
     });
 
-    //----------------------------------------- PAYMENT DATA -----------------------------------
+    //----------------------------------------- PAYMENT DATA -----------------------------------        
     //-------------------------------------- payment api ---------------------------------------
     app.post("/payment-intent", async (req, res) => {
       const { price } = req.body;
