@@ -107,15 +107,27 @@ async function run() {
       res.send(result);
     });
 
-    // filter products
+    // filter products by asset type
     app.get("/filter", async (req, res) => {
-      const { assetType } = req.query;
-      let filter = {};
-      if (assetType) {
-        filter.assetType = assetType;
+      const { assetType, requesterEmail } = req.query;
+      if (!assetType || !requesterEmail) {
+        return res.status(400).json({ message: "Missing assetType or email" });
       }
+      let filter = { assetType, requesterEmail };
       const result = await requProductCollec.find(filter).toArray();
-    res.send(result);
+      res.send(result);
+    });
+    // filter products bu request status
+    app.get("/filter-status", async (req, res) => {
+      const { requestStatus, requesterEmail } = req.query;
+      if (!requestStatus || !requesterEmail) {
+        return res
+          .status(400)
+          .json({ message: "Missing requestStatus or email" });
+      }
+      let filter = { requestStatus, requesterEmail };
+      const result = await requProductCollec.find(filter).toArray();
+      res.send(result);
     });
 
     app.post("/requ-product", async (req, res) => {
