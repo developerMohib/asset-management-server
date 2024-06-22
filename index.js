@@ -31,14 +31,13 @@ async function run() {
     const requProductCollec = database.collection("requ-product");
     const approvProductCollec = database.collection("approv-product");
 
-    //------------------------------------------- POST DATA ------------------------------------
-    // employee or manager All user ------------------------------------------------------------
+    //------------------------------ employee or manager All user ------------------------------
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
-    // employee or manager get from database ---------------------------------------------------
+    // employee or manager get from database
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -46,7 +45,7 @@ async function run() {
       res.send(result);
     });
 
-    // employee or manager post in database ----------------------------------------------------
+    // employee or manager post in database
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
@@ -67,10 +66,33 @@ async function run() {
     });
 
     // update the product quantity
-    app.put("/products/:id", async (req, res) => {
+    app.patch("/products/:id", async (req, res) => {
       const id = req.params.id;
+      const { quantityChange } = req.body;
+      const productQuantityChange = Number(quantityChange);
+
       const query = { _id: new ObjectId(id) };
-      const result = await productCollection.deleteOne(query); // have to change deleteOne
+      const product = await productCollection.findOne(query);
+
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      // Convert the productQuantity from string to number
+      const currentQuantity = Number(product.productQuantity);
+
+      // Calculate the new quantity
+      const newQuantity = currentQuantity + productQuantityChange;
+      if (newQuantity < 0) {
+        return res.status(400).json({ message: 'Quantity cannot be negative' });
+      }
+
+      // Update the product quantity
+      const updateDoc = {
+        $set: {
+          productQuantity: newQuantity.toString(),
+        },
+      };
+      const result = await productCollection.updateOne(query, updateDoc);
       res.send(result);
     });
 
@@ -96,7 +118,7 @@ async function run() {
       res.send(result);
     });
 
-    // search products
+    // search products--------------------------------------------------
     app.get("/search", async (req, res) => {
       const { name } = req.query;
       if (!name) {
@@ -107,7 +129,7 @@ async function run() {
       res.send(result);
     });
 
-    // filter products by asset type
+    // filter products by asset type----------------------------------------------
     app.get("/filter", async (req, res) => {
       const { assetType, requesterEmail } = req.query;
       if (!assetType || !requesterEmail) {
@@ -117,7 +139,8 @@ async function run() {
       const result = await requProductCollec.find(filter).toArray();
       res.send(result);
     });
-    // filter products bu request status
+
+    // filter products bu request status----------------------------------------
     app.get("/filter-status", async (req, res) => {
       const { requestStatus, requesterEmail } = req.query;
       if (!requestStatus || !requesterEmail) {
@@ -150,7 +173,8 @@ async function run() {
       const result = await requProductCollec.updateOne(query, updateDoc);
       res.send(result);
     });
-    // for rejected product
+
+    // for rejected product----------------------------------------------------
     app.patch("/requ-product/rejected/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
