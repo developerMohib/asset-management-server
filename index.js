@@ -37,7 +37,7 @@ async function run() {
       res.send(result);
     });
 
-    // employee or manager get from database
+    // employee or manager get from database -----------------------------------
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
@@ -45,7 +45,7 @@ async function run() {
       res.send(result);
     });
 
-    // employee or manager post in database
+    // employee or manager post in database ------------------------------
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
@@ -62,6 +62,28 @@ async function run() {
     app.post("/products", async (req, res) => {
       const product = req.body;
       const result = await productCollection.insertOne(product);
+      res.send(result);
+    });
+
+    // search products--------------------------------------------------
+    app.get("/search-products", async (req, res) => {
+      const { name } = req.query;
+      if (!name) {
+        return res.status(400).send("Product name is required");
+      }
+      const query = { productName: new RegExp(name, "i") };
+      const result = await productCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // filter products by asset type
+    app.get("/filter-products", async (req, res) => {
+      const { productType } = req.query;
+      if (!productType) {
+        return res.status(400).json({ message: "Missing assetType or email" });
+      }
+      let filter = { productType };
+      const result = await productCollection.find(filter).toArray();
       res.send(result);
     });
 
@@ -83,7 +105,7 @@ async function run() {
       // Calculate the new quantity
       const newQuantity = currentQuantity + productQuantityChange;
       if (newQuantity < 0) {
-        return res.status(400).json({ message: 'Quantity cannot be negative' });
+        return res.status(400).json({ message: "Quantity cannot be negative" });
       }
 
       // Update the product quantity
@@ -105,7 +127,6 @@ async function run() {
     });
 
     // ------------------------------------- Requested Product ---------------------------------
-    // ------------------------------------- Requested Product ---------------------------------
     app.get("/requ-product", async (req, res) => {
       const result = await requProductCollec.find().toArray();
       res.send(result);
@@ -118,7 +139,7 @@ async function run() {
       res.send(result);
     });
 
-    // search products--------------------------------------------------
+    // search products
     app.get("/search", async (req, res) => {
       const { name } = req.query;
       if (!name) {
@@ -129,7 +150,7 @@ async function run() {
       res.send(result);
     });
 
-    // filter products by asset type----------------------------------------------
+    // filter products by asset type
     app.get("/filter", async (req, res) => {
       const { assetType, requesterEmail } = req.query;
       if (!assetType || !requesterEmail) {
@@ -140,7 +161,7 @@ async function run() {
       res.send(result);
     });
 
-    // filter products bu request status----------------------------------------
+    // filter products bu request status
     app.get("/filter-status", async (req, res) => {
       const { requestStatus, requesterEmail } = req.query;
       if (!requestStatus || !requesterEmail) {
@@ -174,7 +195,7 @@ async function run() {
       res.send(result);
     });
 
-    // for rejected product----------------------------------------------------
+    // for rejected product
     app.patch("/requ-product/rejected/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -195,7 +216,6 @@ async function run() {
     });
 
     // ------------------------------------- Approve Product ---------------------------------
-    // ------------------------------------- Approve Product ---------------------------------
     app.get("/requ-product", async (req, res) => {
       const result = await approvProductCollec.find().toArray();
       res.send(result);
@@ -208,7 +228,6 @@ async function run() {
     });
 
     //----------------------------------------- PAYMENT DATA -----------------------------------
-    //-------------------------------------- payment api ---------------------------------------
     app.post("/payment-intent", async (req, res) => {
       const { price } = req.body;
       console.log(price, "price", typeof price);
