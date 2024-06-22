@@ -22,6 +22,7 @@ const client = new MongoClient(uri, {
   },
 });
 // server link : https://asset-management-server-brown.vercel.app/
+// http://localhost:9000
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -131,6 +132,20 @@ async function run() {
       const result = await requProductCollec.find().toArray();
       res.send(result);
     });
+    
+    // search products
+    app.get("/search-user", async (req, res) => {
+      const { query } = req.query;
+      if (!query) {
+        return res.status(400).send("Query parameter is required");
+      }
+      const userQuery = { $or: [
+        { requesterName: { $regex: query, $options: 'i' } },
+        { requesterEmail: { $regex: query, $options: 'i' } }
+      ] };
+      const result = await requProductCollec.find(userQuery).toArray();
+      res.send(result);
+    });
 
     app.get("/requ-product/:email", async (req, res) => {
       const email = req.params.email;
@@ -184,14 +199,17 @@ async function run() {
     app.put("/requ-product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      // const option = {upsert : true};
-      // const approveDate = req.body;
+      const {approveDate} = req.body;
+      console.log('202 ', approveDate)
+      const option = {upsert : true};
       const updateDoc = {
         $set: {
           requestStatus: "approved",
+          approveDate : approveDate,
         },
       };
-      const result = await requProductCollec.updateOne(query, updateDoc);
+      console.log('210 ',updateDoc)
+      const result = await requProductCollec.updateOne(query, updateDoc,option);
       res.send(result);
     });
 
