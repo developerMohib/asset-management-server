@@ -88,14 +88,31 @@ async function run() {
       // Check if the team already exists
       const managerQuery = { managerId: managerId };
       let team = await teamCollection.findOne(managerQuery);
+
       if (team) {
+        // Team exists, check if employee is already in the team
+        const employeeExists = team.employeesArray.some(
+          (emp) => emp.employeeId === employee.employeeId
+        );
+
+        if (employeeExists) {
+          return res
+            .status(400)
+            .json({ error: "Employee is already in the team" });
+        }
+
         // Team exists, update the employeesArray
         if (!team.employeesArray.includes(employee)) {
           // add employee to employee array
+
           await teamCollection.updateOne(
             { managerId: managerId },
-            { $push: { employeesArray: employee }, $set: { name: manager.name } }
+            {
+              $push: { employeesArray: employee },
+              $set: { name: manager.name },
+            }
           );
+
           // Fetch the updated team document
           team = await teamCollection.findOne(managerQuery);
         } else {
@@ -104,6 +121,7 @@ async function run() {
             .json({ error: "Employee is already in the team" });
         }
       }
+
       // Team doesn't exist, create a new team
       else {
         // Team doesn't exist, create a new team
@@ -118,19 +136,19 @@ async function run() {
     });
 
     // delete employee
-    app.delete('/teams/:teamId/employees/:employeeId', async (req, res)=> {
+    app.delete("/teams/:teamId/employees/:employeeId", async (req, res) => {
       const { teamId, employeeId } = req.params;
       const filter = { _id: new ObjectId(teamId) };
-        const update = {
-            $pull: {
-                employeesArray: { employeeId: employeeId }
-            }
-        };
+      const update = {
+        $pull: {
+          employeesArray: { employeeId: employeeId },
+        },
+      };
 
-        // Perform the update operation
-        const result = await teamCollection.updateOne(filter, update);
-        res.send(result)
-    })
+      // Perform the update operation
+      const result = await teamCollection.updateOne(filter, update);
+      res.send(result);
+    });
 
     //-------------------------------------- PRODUCT API --------------------------------------
     app.get("/products", async (req, res) => {
