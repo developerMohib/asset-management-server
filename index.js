@@ -31,10 +31,18 @@ async function run() {
     const productCollection = database.collection("products");
     const requProductCollec = database.collection("requ-product");
     const approvProductCollec = database.collection("approv-product");
+    const teamCollection = database.collection("team");
 
     //------------------------------ employee or manager All user ------------------------------
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+    // only employee geting
+    app.get("/employees", async (req, res) => {
+      const query = { status: "employee" };
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     });
 
@@ -46,12 +54,83 @@ async function run() {
       res.send(result);
     });
 
-    // employee or manager post in database ------------------------------
+    // employee or manager post in database
     app.post("/users", async (req, res) => {
       const user = req.body;
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
+    //------------------------------------ Make Team All user ---------------------------------
+    app.get("/teams", async (req, res) => {
+      const result = await teamCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get specific manager list
+    app.get("/teams/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { managerId: id };
+      const result = await teamCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // Create a new team
+    app.post("/teams", async (req, res) => {
+      const { managerId, employee } = req.body;
+
+      const query = { _id: new ObjectId(managerId) };
+      const manager = await usersCollection.findOne(query);
+      if (!manager) {
+        return res.status(400).json({ error: "Invalid manager" });
+      }
+
+      // Check if the team already exists
+      const managerQuery = { managerId: managerId };
+      let team = await teamCollection.findOne(managerQuery);
+      if (team) {
+        // Team exists, update the employeesArray
+        if (!team.employeesArray.includes(employee)) {
+          // add employee to employee array
+          await teamCollection.updateOne(
+            { managerId: managerId },
+            { $push: { employeesArray: employee }, $set: { name: manager.name } }
+          );
+          // Fetch the updated team document
+          team = await teamCollection.findOne(managerQuery);
+        } else {
+          return res
+            .status(400)
+            .json({ error: "Employee is already in the team" });
+        }
+      }
+      // Team doesn't exist, create a new team
+      else {
+        // Team doesn't exist, create a new team
+        team = {
+          managerId: managerId,
+          name: manager.name,
+          employeesArray: [employee],
+        };
+        await teamCollection.insertOne(team);
+      }
+      res.send(team);
+    });
+
+    // delete employee
+    app.delete('/teams/:teamId/employees/:employeeId', async (req, res)=> {
+      const { teamId, employeeId } = req.params;
+      const filter = { _id: new ObjectId(teamId) };
+        const update = {
+            $pull: {
+                employeesArray: { employeeId: employeeId }
+            }
+        };
+
+        // Perform the update operation
+        const result = await teamCollection.updateOne(filter, update);
+        res.send(result)
+    })
 
     //-------------------------------------- PRODUCT API --------------------------------------
     app.get("/products", async (req, res) => {
@@ -132,17 +211,19 @@ async function run() {
       const result = await requProductCollec.find().toArray();
       res.send(result);
     });
-    
+
     // search products
     app.get("/search-user", async (req, res) => {
       const { query } = req.query;
       if (!query) {
         return res.status(400).send("Query parameter is required");
       }
-      const userQuery = { $or: [
-        { requesterName: { $regex: query, $options: 'i' } },
-        { requesterEmail: { $regex: query, $options: 'i' } }
-      ] };
+      const userQuery = {
+        $or: [
+          { requesterName: { $regex: query, $options: "i" } },
+          { requesterEmail: { $regex: query, $options: "i" } },
+        ],
+      };
       const result = await requProductCollec.find(userQuery).toArray();
       res.send(result);
     });
@@ -199,17 +280,19 @@ async function run() {
     app.put("/requ-product/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const {approveDate} = req.body;
-      console.log('202 ', approveDate)
-      const option = {upsert : true};
+      const { approveDate } = req.body;
+      const option = { upsert: true };
       const updateDoc = {
         $set: {
           requestStatus: "approved",
-          approveDate : approveDate,
+          approveDate: approveDate,
         },
       };
-      console.log('210 ',updateDoc)
-      const result = await requProductCollec.updateOne(query, updateDoc,option);
+      const result = await requProductCollec.updateOne(
+        query,
+        updateDoc,
+        option
+      );
       res.send(result);
     });
 
@@ -248,7 +331,6 @@ async function run() {
     //----------------------------------------- PAYMENT DATA -----------------------------------
     app.post("/payment-intent", async (req, res) => {
       const { price } = req.body;
-      console.log(price, "price", typeof price);
       if (price === 0) {
         return;
       }
