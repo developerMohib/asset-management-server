@@ -1,0 +1,6 @@
+DB_USER=corporateManage
+DB_PASS=ybQt333fn4li2GVa
+STRIPE_SK=sk_test_51PME4q00KTgNuCfQ4ZghNEw3W1TN6p9lXcqdEAgSu2QXI4H1yiXXLuzx6vuqHudkNiu0zmYSAgevAuJMZ6iUZTRS00auQsulHy
+
+ADMIN_EMAIL='mohibullahmohim2020@gmail.com'
+ADMIN_PASS='febcxtwwjvoqvnlf'
