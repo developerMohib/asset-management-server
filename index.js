@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.STRIPE_SK);
 const app = express();
 const port = process.env.PORT || 9000;
+const userRoute = require("./api/routes/user.route")
 
 // middle-wares
 app.use(cors());
@@ -21,8 +22,10 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
 // server link : https://asset-management-server-brown.vercel.app/
 // http://localhost:9000
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -38,6 +41,7 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+    app.use('/all',userRoute)
 
     // only employee geting
     app.get("/employees", async (req, res) => {
@@ -374,6 +378,11 @@ run().catch(console.dir);
 // server call
 app.get("/", (req, res) => {
   res.send("Corporate Management Server is running BROH");
+});
+// Global error handler (optional)
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: "Internal Server Error" });
 });
 app.listen(port, () => {
   console.log(`Corporate Management Server Port is ${port}`);
