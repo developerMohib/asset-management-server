@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require('cookie-parser');
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const stripe = require("stripe")(process.env.STRIPE_SK);
@@ -10,7 +11,7 @@ const userRoute = require("./api/routes/user.route")
 // middle-wares
 app.use(cors());
 app.use(express.json());
-
+app.use(cookieParser())
 // mongo db connect
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ylmjbhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -41,7 +42,7 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
-    app.use('/all',userRoute)
+    app.use('/all',userRoute);
 
     // only employee geting
     app.get("/employees", async (req, res) => {
